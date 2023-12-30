@@ -1,6 +1,7 @@
 #include "cpu.h"
 #include "decode.h"
 #include <stdbool.h>
+#include "difftest.h"
 #include "memory.h"
 #include <stdint.h>
 #include <string.h>
@@ -83,7 +84,8 @@ static void decode_operand(Decode *s, int *rd, uint32_t *src1, uint32_t *src2,
     }
 }
 
-static int decode_exec(Decode *s) {
+static int decode_exec(Decode *s, DifftestResult *difftest_result) {
+    difftest_result->pc = s->pc;
     int rd = 0;
     uint32_t src1 = 0, src2 = 0, imm = 0;
     s->dnpc = s->snpc;
@@ -93,6 +95,18 @@ static int decode_exec(Decode *s) {
     {                                                                    \
         decode_operand(s, &rd, &src1, &src2, &imm, concat(TYPE_, type)); \
         __VA_ARGS__;                                                     \
+        switch (concat(TYPE_, type)) {                                   \
+            case TYPE_R:                                                 \
+            case TYPE_I:                                                 \
+            case TYPE_U:                                                 \
+            case TYPE_J:                                                 \
+                difftest_result->reg_id = rd;                            \
+                difftest_result->wen = 1;                                \
+                difftest_result->reg_val = cpu.gpr[rd];                  \
+                break;                                                   \
+            default:                                                     \
+                difftest_result->wen = 0;                                \
+        }                                                                \
     }
 
     INSTPAT_START();
@@ -118,29 +132,29 @@ static int decode_exec(Decode *s) {
     return 0;
 }
 
-static int isa_exec_once(Decode *s) {
+static int isa_exec_once(Decode *s, DifftestResult *difftest_result) {
     s->isa.inst.val = inst_fetch(&s->snpc, 4);
-    return decode_exec(s);
+    return decode_exec(s, difftest_result);
 }
 
-static void exec_once(Decode *s, uint32_t pc) {
+static void exec_once(Decode *s, uint32_t pc, DifftestResult *difftest_result) {
     s->pc = pc;
     s->snpc = pc;
-    isa_exec_once(s);
+    isa_exec_once(s, difftest_result);
     cpu.pc = s->dnpc;
 }
 
-static void execute(uint64_t n) {
+static void execute(uint64_t n, DifftestResult *difftest_result) {
     // TODO
     Decode s;
     for (; n > 0; n--) {
-        exec_once(&s, cpu.pc);
+        exec_once(&s, cpu.pc, difftest_result);
         // trace_and_difftest(&s, cpu.pc);
         if (nemu_state.state != NEMU_RUNNING) break;
     }
 }
 
-void cpu_exec(uint64_t n) {
+void cpu_exec(uint64_t n, DifftestResult *difftest_result) {
     switch (nemu_state.state) {
         case NEMU_END:
         case NEMU_ABORT:
@@ -152,7 +166,7 @@ void cpu_exec(uint64_t n) {
         default:
             nemu_state.state = NEMU_RUNNING;
     }
-    execute(n);
+    execute(n, difftest_result);
     switch (nemu_state.state) {
         case NEMU_RUNNING:
             nemu_state.state = NEMU_STOP;

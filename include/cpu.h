@@ -2,12 +2,18 @@
 #define __CPU_H__
 
 #include <stdint.h>
+#include "difftest.h"
 #include "memory.h"
 
 #define NEMUTRAP(thispc, code) set_nemu_state(NEMU_END, thispc, code)
 #define INV(thispc) invalid_inst(thispc)
 
 #define gpr(idx) (cpu.gpr[check_reg_idx(idx)])
+
+/* const char *regs[] = {"$0", "ra", "sp",  "gp",  "tp", "t0", "t1", "t2", */
+/*                       "s0", "s1", "a0",  "a1",  "a2", "a3", "a4", "a5", */
+/*                       "a6", "a7", "s2",  "s3",  "s4", "s5", "s6", "s7", */
+/*                       "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"}; */
 
 typedef struct {
     // 通用寄存器
@@ -50,6 +56,6 @@ void invalid_inst(uint32_t thispc);
 
 void init_isa();
 
-void cpu_exec(uint64_t n);
+void cpu_exec(uint64_t n, DifftestResult *difftest_result);
 
 #endif
