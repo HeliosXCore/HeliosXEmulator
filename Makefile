@@ -7,6 +7,8 @@ BUILD_DIR ?= ./build
 OBJ_DIR ?= $(BUILD_DIR)/obj
 BINARY ?= $(BUILD_DIR)/$(NAME)
 
+PLATFORM	?= MACOS
+
 
 .DEFAULT_GOAL = app
 
@@ -19,7 +21,7 @@ INCLUDES  = $(addprefix -I, $(INC_DIR))
 CFLAGS   += -O2 -fPIC -MMD -ggdb3 $(INCLUDES)
 
 # Files to be compiled
-SRCS = $(shell find src/ -name "*.c")
+SRCS = $(shell find src/ -name "*.c" | grep -v "src/main.c")
 OBJS = $(SRCS:src/%.c=$(OBJ_DIR)/%.o)
 
 # Compilation patterns
@@ -55,8 +57,16 @@ gdb: run-env
 $(BINARY).so: $(OBJS)
 	@echo + LD $@
 	@$(LD) -O2 -rdynamic -shared -fPIC -o $@ $^
+	@cp $(BINARY).so $(BUILD_DIR)/lib$(NAME).so
 
-share: $(BINARY).so
+$(BINARY).a: $(OBJS)
+	@echo + AR $@
+	@ar rcs $@ $^
+	@mv $(BINARY).a $(BUILD_DIR)/lib$(NAME).a
+
+shared: $(BINARY).so
+
+static: $(BINARY).a
 
 clean:
 	-rm -rf $(BUILD_DIR)

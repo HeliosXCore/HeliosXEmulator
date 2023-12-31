@@ -6,7 +6,7 @@
 
 #define __EXPORT __attribute__((visibility("default")))
 
-typedef struct __attribute__((packed)) _DifftestResult {
+typedef struct __EXPORT _DifftestResult {
     int reg_id;
     uint32_t reg_val;
     int8_t wen;
