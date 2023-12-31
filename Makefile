@@ -52,11 +52,11 @@ run: run-env
 gdb: run-env
 	gdb -s $(BINARY) --args $(HEMU_EXEC)
 
-$(BINARY)-so: $(OBJS)
+$(BINARY).so: $(OBJS)
 	@echo + LD $@
 	@$(LD) -O2 -rdynamic -shared -fPIC -o $@ $^
 
-share: $(BINARY)-so
+share: $(BINARY).so
 
 clean:
 	-rm -rf $(BUILD_DIR)
