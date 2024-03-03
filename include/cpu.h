@@ -5,6 +5,9 @@
 #include "difftest.h"
 #include "memory.h"
 
+#define word_t uint32_t
+#define sword_t int32_t
+
 #define NEMUTRAP(thispc, code) set_nemu_state(NEMU_END, thispc, code)
 #define INV(thispc) invalid_inst(thispc)
 

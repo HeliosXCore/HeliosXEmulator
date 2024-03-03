@@ -22,6 +22,7 @@ CFLAGS   += -O2 -fPIC -MMD -ggdb3 $(INCLUDES)
 
 # Files to be compiled
 SRCS = $(shell find src/ -name "*.c" | grep -v "src/main.c")
+# SRCS = $(shell find src/ -name "*.c")
 OBJS = $(SRCS:src/%.c=$(OBJ_DIR)/%.o)
 
 # Compilation patterns
